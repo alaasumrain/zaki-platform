@@ -1,0 +1,16 @@
+name = "zaki-platform"
+compatibility_date = "2024-01-01"
+main = "src/index.ts"
+
+# Sandbox configuration
+[[sandbox]]
+name = "user-sandboxes"
+
+# R2 storage for user data
+[[r2_buckets]]
+binding = "UserStorage"
+bucket_name = "zaki-user-storage"
+
+# Environment variables
+[vars]
+NODE_ENV = "production"
