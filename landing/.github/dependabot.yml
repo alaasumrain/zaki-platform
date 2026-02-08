@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directory: /scripts/docker/install-sh-smoke
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /scripts/docker/install-sh-nonroot
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /scripts/docker/install-sh-git-smoke
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /scripts/e2e
+    schedule:
+      interval: weekly

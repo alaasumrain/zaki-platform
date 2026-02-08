@@ -6,3 +6,13 @@ dist/
 *.log
 .DS_Store
 test-user-1/
+
+# Cloned reference repos
+external/
+repos/
+
+# Node modules
+node_modules/
+
+# Landing node_modules
+landing/node_modules/

@@ -1,0 +1,52 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "zaki-platform",
+  "account_id": "97532532dfe81c1448b367fd6a2d03d4",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-13",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Container configuration for Sandboxes
+  "containers": [
+    {
+      "class_name": "Sandbox",
+      "image": "./Dockerfile",
+      "instance_type": "standard",
+      "max_instances": 10
+    }
+  ],
+
+  // Durable Objects for Sandbox bindings
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "Sandbox",
+        "name": "Sandbox"
+      }
+    ]
+  },
+
+  // Migrations for Durable Objects
+  "migrations": [
+    {
+      "new_sqlite_classes": ["Sandbox"],
+      "tag": "v1"
+    }
+  ],
+
+  // R2 storage for user data
+  "r2_buckets": [
+    {
+      "binding": "UserStorage",
+      "bucket_name": "zaki-user-storage"
+    }
+  ],
+
+  // Environment variables
+  "vars": {
+    "NODE_ENV": "production",
+    "TELEGRAM_BOT_TOKEN": "8517348591:AAH0-wsbFUn0so3JO-yN_BsV32Khw6IUs6Q",
+    "GOOGLE_API_KEY": "AIzaSyBV8TlBVb_QEc2ceYoQpH6Ui-v9GpxavS4",
+    "DEFAULT_MODEL": "google/gemini-3-flash-preview"
+  }
+}

@@ -1,0 +1,22 @@
+name: Install Git Smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *" # daily
+
+jobs:
+  install-git-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout installer
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
+
+      - name: Build git smoke image
+        run: docker build -t clawdbot-install-git-smoke:ci -f scripts/docker/install-sh-git-smoke/Dockerfile .
+
+      - name: Run git smoke
+        env:
+          CLAWDBOT_NO_ONBOARD: "1"
+          CLAWDBOT_NO_PROMPT: "1"
+        run: docker run --rm -t -e CLAWDBOT_NO_ONBOARD -e CLAWDBOT_NO_PROMPT clawdbot-install-git-smoke:ci

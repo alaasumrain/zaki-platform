@@ -1,0 +1,21 @@
+{
+  "routes": [
+    {
+      "src": "^/$",
+      "has": [{ "type": "host", "value": "trust.zaki.ai" }],
+      "dest": "/trust"
+    },
+    {
+      "src": "^/(.*)$",
+      "has": [{ "type": "host", "value": "zaki.bot" }],
+      "status": 308,
+      "headers": { "Location": "https://zaki.ai/$1" }
+    },
+    {
+      "src": "^/(.*)$",
+      "has": [{ "type": "host", "value": "www.zaki.bot" }],
+      "status": 308,
+      "headers": { "Location": "https://zaki.ai/$1" }
+    }
+  ]
+}
