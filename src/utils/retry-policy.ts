@@ -1,0 +1,71 @@
+/**
+ * Retry Policy for Telegram API
+ * Adapted from openclaw-core/src/infra/retry-policy.ts
+ */
+
+import { formatErrorMessage } from './errors';
+import { type RetryConfig, resolveRetryConfig, retryAsync } from './retry';
+
+export type RetryRunner = <T>(fn: () => Promise<T>, label?: string) => Promise<T>;
+
+export const TELEGRAM_RETRY_DEFAULTS = {
+  attempts: 3,
+  minDelayMs: 400,
+  maxDelayMs: 30_000,
+  jitter: 0.1,
+};
+
+const TELEGRAM_RETRY_RE = /429|timeout|connect|reset|closed|unavailable|temporarily/i;
+
+function getTelegramRetryAfterMs(err: unknown): number | undefined {
+  if (!err || typeof err !== "object") {
+    return undefined;
+  }
+  const candidate =
+    "parameters" in err && err.parameters && typeof err.parameters === "object"
+      ? (err.parameters as { retry_after?: unknown }).retry_after
+      : "response" in err &&
+          err.response &&
+          typeof err.response === "object" &&
+          "parameters" in err.response
+        ? (
+            err.response as {
+              parameters?: { retry_after?: unknown };
+            }
+          ).parameters?.retry_after
+        : "error" in err && err.error && typeof err.error === "object" && "parameters" in err.error
+          ? (err.error as { parameters?: { retry_after?: unknown } }).parameters?.retry_after
+          : undefined;
+  return typeof candidate === "number" && Number.isFinite(candidate) ? candidate * 1000 : undefined;
+}
+
+export function createTelegramRetryRunner(params: {
+  retry?: RetryConfig;
+  configRetry?: RetryConfig;
+  verbose?: boolean;
+  shouldRetry?: (err: unknown) => boolean;
+}): RetryRunner {
+  const retryConfig = resolveRetryConfig(TELEGRAM_RETRY_DEFAULTS, {
+    ...params.configRetry,
+    ...params.retry,
+  });
+  const shouldRetry = params.shouldRetry
+    ? (err: unknown) => params.shouldRetry?.(err) || TELEGRAM_RETRY_RE.test(formatErrorMessage(err))
+    : (err: unknown) => TELEGRAM_RETRY_RE.test(formatErrorMessage(err));
+
+  return <T>(fn: () => Promise<T>, label?: string) =>
+    retryAsync(fn, {
+      ...retryConfig,
+      label,
+      shouldRetry,
+      retryAfterMs: getTelegramRetryAfterMs,
+      onRetry: params.verbose
+        ? (info) => {
+            const maxRetries = Math.max(1, info.maxAttempts - 1);
+            console.warn(
+              `telegram ${info.label ?? label ?? "request"} retry ${info.attempt}/${maxRetries} in ${info.delayMs}ms: ${formatErrorMessage(info.err)}`,
+            );
+          }
+        : undefined,
+    });
+}

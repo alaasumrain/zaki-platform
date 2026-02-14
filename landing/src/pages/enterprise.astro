@@ -1,0 +1,138 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Zaki for Teams & Businesses — Custom agent systems"
+  description="We build and white-label agent platforms so your brand can offer tell it what you need, it handles it—without building the infra."
+  canonicalUrl="https://zaki.ai/enterprise"
+>
+  <style>
+    :root {
+      --bg-deep: #0a0a0f;
+      --bg-card: #12121a;
+      --coral-bright: #ff6b6b;
+      --cyan-bright: #4ecdc4;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --border-color: #2a2a3a;
+    }
+    .enterprise-page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 80px 24px 120px;
+    }
+    .enterprise-page h1 {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .enterprise-page h1 span {
+      background: linear-gradient(135deg, var(--coral-bright), var(--cyan-bright));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .enterprise-page .subhead {
+      font-size: 20px;
+      color: var(--text-secondary);
+      margin-bottom: 48px;
+    }
+    .enterprise-page h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+    }
+    .enterprise-page p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .enterprise-page ul {
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 24px;
+      padding-left: 1.5rem;
+    }
+    .enterprise-page .steps {
+      margin: 24px 0;
+    }
+    .enterprise-page .steps li {
+      margin-bottom: 12px;
+    }
+    .enterprise-page .cta-box {
+      margin-top: 48px;
+      padding: 40px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      text-align: center;
+    }
+    .enterprise-page .cta-box h2 {
+      margin-top: 0;
+    }
+    .enterprise-page .btn {
+      display: inline-block;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      background: var(--coral-bright);
+      color: white;
+      margin-top: 16px;
+    }
+    .enterprise-page .btn:hover {
+      opacity: 0.9;
+    }
+    .back-link {
+      display: inline-block;
+      color: var(--text-secondary);
+      text-decoration: none;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      color: var(--text-primary);
+    }
+  </style>
+
+  <div class="enterprise-page">
+    <a href="/" class="back-link">← Back to home</a>
+
+    <h1>Custom agent systems for teams and businesses</h1>
+    <p class="subhead">We build and white-label agent platforms so your brand can offer “tell it what you need, it handles it”—without building the infra.</p>
+    <a href="mailto:enterprise@zaki.ai" class="btn">Contact us</a>
+
+    <h2>Agent frameworks, your brand</h2>
+    <p>Zaki is an outcome-first agent product. We also build and white-label custom agent systems for teams and businesses. Same promise—<em>tell it what you need, it handles it</em>—with your branding, your use cases, and your channels (Slack, Teams, WhatsApp Business, etc.).</p>
+    <ul>
+      <li><strong>Custom agent platforms</strong> — Your users get their own agents; we run the platform.</li>
+      <li><strong>White-label</strong> — Your brand, your domain, your support. We handle the stack.</li>
+      <li><strong>Channels you need</strong> — Telegram, WhatsApp, Slack, Microsoft Teams, or custom integrations.</li>
+      <li><strong>Security & compliance</strong> — Isolated instances, private data, and deployment options that fit your requirements.</li>
+    </ul>
+
+    <h2>Built for teams and businesses that want agents, not infra</h2>
+    <ul>
+      <li><strong>Support & ops</strong> — Internal “ask the agent” for policies, runbooks, and follow-ups.</li>
+      <li><strong>Customer-facing agents</strong> — Branded assistants for your product or community.</li>
+      <li><strong>White-label resellers</strong> — Offer a personal-agent product under your own name.</li>
+    </ul>
+
+    <h2>From pilot to scale</h2>
+    <ol class="steps">
+      <li><strong>Scope</strong> — Use cases, channels, branding, and compliance needs.</li>
+      <li><strong>Build</strong> — We stand up your agent platform (or white-label Zaki) and integrate your channels.</li>
+      <li><strong>Run</strong> — We operate the platform; you own the relationship with your users.</li>
+    </ol>
+    <a href="mailto:enterprise@zaki.ai" class="btn">Get in touch to discuss your use case</a>
+
+    <div class="cta-box">
+      <h2>Ready to offer your own agent product?</h2>
+      <p>Tell us your use case—team assistant, customer-facing bot, or white-label. We’ll get back within a business day.</p>
+      <a href="mailto:enterprise@zaki.ai" class="btn">Contact sales</a>
+    </div>
+  </div>
+</Layout>

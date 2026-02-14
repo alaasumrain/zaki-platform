@@ -1,0 +1,648 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { siTelegram } from 'simple-icons';
+
+const siIcon = (icon: any) => icon.path;
+
+const plans = {
+  byok: {
+    name: 'Bring Your Keys',
+    price: 19,
+    period: 'month',
+    description: 'Use your own API keys',
+    features: [
+      'Your own isolated instance',
+      'All platforms (Telegram, WhatsApp, Discord)',
+      'Any model (Claude, GPT, Gemini, etc)',
+      'Browser automation & web access',
+      '2GB memory',
+      'Full privacy — we never see your data',
+    ],
+    stripeLink: '#', // Will be replaced with actual Stripe link
+  },
+  premium: {
+    name: 'Premium',
+    price: 60,
+    period: 'month',
+    description: 'Claude included — no keys needed',
+    features: [
+      'Everything in BYOK',
+      'Claude Sonnet 4 included',
+      'No API key required',
+      'Priority support',
+      'Fair use — no hard limits',
+    ],
+    badge: 'Most Popular',
+    stripeLink: '#', // Will be replaced with actual Stripe link
+  },
+};
+---
+
+<Layout title="Subscribe to Zaki — Billing">
+  <style>
+    :root {
+      --bg-deep: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a25;
+      --coral-bright: #ff6b6b;
+      --coral-dark: #cc5555;
+      --cyan-bright: #4ecdc4;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --border-color: #2a2a3a;
+      --success: #22c55e;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .billing-page {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    .billing-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .billing-header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .billing-header h1 span {
+      background: linear-gradient(135deg, var(--coral-bright), var(--cyan-bright));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .billing-header p {
+      color: var(--text-secondary);
+      font-size: 18px;
+    }
+
+    .billing-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .billing-grid-three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    @media (max-width: 900px) {
+      .billing-grid-three {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .billing-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .plan-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      position: relative;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .plan-card:hover {
+      border-color: var(--coral-bright);
+      transform: translateY(-4px);
+    }
+
+    .plan-card.selected {
+      border-color: var(--coral-bright);
+      box-shadow: 0 0 0 2px var(--coral-bright);
+    }
+
+    .plan-card.featured {
+      border-color: var(--coral-bright);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--coral-bright);
+      color: white;
+      padding: 4px 16px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .plan-header {
+      margin-bottom: 24px;
+    }
+
+    .plan-name {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .plan-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .plan-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 24px;
+    }
+
+    .plan-price-amount {
+      font-size: 48px;
+      font-weight: 700;
+    }
+
+    .plan-price-currency {
+      font-size: 24px;
+      color: var(--text-secondary);
+    }
+
+    .plan-price-period {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    .plan-features {
+      list-style: none;
+    }
+
+    .plan-features li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .plan-features li::before {
+      content: '✓';
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    .plan-radio {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .plan-card.selected .plan-radio {
+      border-color: var(--coral-bright);
+      background: var(--coral-bright);
+    }
+
+    .plan-card.selected .plan-radio::after {
+      content: '✓';
+      color: white;
+      font-size: 14px;
+    }
+
+    /* Checkout Form */
+    .checkout-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .checkout-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .checkout-title .step {
+      background: var(--coral-bright);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-deep);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--coral-bright);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    .telegram-connect {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: rgba(38, 165, 228, 0.1);
+      border: 1px solid #26A5E4;
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+
+    .telegram-connect svg {
+      width: 32px;
+      height: 32px;
+      fill: #26A5E4;
+    }
+
+    .telegram-connect-text {
+      flex: 1;
+    }
+
+    .telegram-connect-text strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .telegram-connect-text span {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Order Summary */
+    .order-summary {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .order-summary h3 {
+      font-size: 18px;
+      margin-bottom: 24px;
+    }
+
+    .order-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .order-line:last-child {
+      border-bottom: none;
+    }
+
+    .order-line.total {
+      font-size: 20px;
+      font-weight: 600;
+      padding-top: 16px;
+      margin-top: 8px;
+      border-top: 2px solid var(--border-color);
+      border-bottom: none;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 16px 28px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      margin-top: 24px;
+    }
+
+    .btn-primary {
+      background: var(--coral-bright);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--coral-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary:disabled {
+      background: var(--border-color);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .secure-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .secure-badge::before {
+      content: '🔒';
+    }
+
+    .guarantee {
+      text-align: center;
+      margin-top: 32px;
+      padding: 24px;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid var(--success);
+      border-radius: 12px;
+    }
+
+    .guarantee h4 {
+      color: var(--success);
+      margin-bottom: 8px;
+    }
+
+    .guarantee p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+
+    .back-link:hover {
+      color: var(--text-primary);
+    }
+  </style>
+
+  <div class="billing-page">
+    <a href="/" class="back-link">← Back to home</a>
+
+    <div class="billing-header">
+      <h1>Plans that match how you use your agent</h1>
+      <p>Start free. Upgrade when you want more memory, more actions, and faster execution.</p>
+    </div>
+
+    <!-- Step 1: Choose Plan -->
+    <div class="checkout-section">
+      <h2 class="checkout-title">
+        <span class="step">1</span>
+        Choose Your Plan
+      </h2>
+
+      <div class="billing-grid billing-grid-three">
+        <div class="plan-card" data-plan="free" id="plan-free">
+          <div class="plan-radio"></div>
+          <div class="plan-header">
+            <div class="plan-name">Free</div>
+            <div class="plan-desc">Your first agent, no credit card.</div>
+          </div>
+          <div class="plan-price">
+            <span class="plan-price-currency">$</span>
+            <span class="plan-price-amount">0</span>
+            <span class="plan-price-period">forever</span>
+          </div>
+          <ul class="plan-features">
+            <li>Your own personal agent</li>
+            <li>Telegram & WhatsApp</li>
+            <li>Reminders and basic tasks</li>
+            <li>Fair-use limits</li>
+          </ul>
+        </div>
+
+        <div class="plan-card" data-plan="byok" id="plan-byok">
+          <div class="plan-radio"></div>
+          <div class="plan-header">
+            <div class="plan-name">BYOK</div>
+            <div class="plan-desc">Your keys, your models, no limits.</div>
+          </div>
+          <div class="plan-price">
+            <span class="plan-price-currency">$</span>
+            <span class="plan-price-amount">19</span>
+            <span class="plan-price-period">/month</span>
+          </div>
+          <ul class="plan-features">
+            <li>Everything in Free</li>
+            <li>Your own API keys (Claude, GPT, Gemini)</li>
+            <li>More memory, more actions</li>
+            <li>Full privacy</li>
+          </ul>
+        </div>
+
+        <div class="plan-card featured" data-plan="premium" id="plan-premium">
+          <div class="plan-badge">Most popular</div>
+          <div class="plan-radio"></div>
+          <div class="plan-header">
+            <div class="plan-name">Premium</div>
+            <div class="plan-desc">Top model included. Zero setup.</div>
+          </div>
+          <div class="plan-price">
+            <span class="plan-price-currency">$</span>
+            <span class="plan-price-amount">60</span>
+            <span class="plan-price-period">/month</span>
+          </div>
+          <ul class="plan-features">
+            <li>Everything in BYOK</li>
+            <li>Top-tier model included—no API key needed</li>
+            <li>More memory, faster execution</li>
+            <li>Priority support · Fair use</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Connect Telegram -->
+    <div class="checkout-section">
+      <h2 class="checkout-title">
+        <span class="step">2</span>
+        Connect Your Telegram
+      </h2>
+
+      <div class="form-group">
+        <label class="form-label">Your Email</label>
+        <input type="email" class="form-input" id="email" placeholder="you@example.com" required>
+        <p class="form-hint">We'll send your receipt and login details here</p>
+      </div>
+
+      <div class="telegram-connect">
+        <svg viewBox="0 0 24 24">
+          <path d={siIcon(siTelegram)} />
+        </svg>
+        <div class="telegram-connect-text">
+          <strong>Telegram Connection</strong>
+          <span>After payment, you'll get a link to connect @zakified_bot to your Telegram</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="order-summary">
+      <h3>Order Summary</h3>
+      
+      <div class="order-line">
+        <span id="summary-plan">Premium</span>
+        <span id="summary-price">$60/mo</span>
+      </div>
+      
+      <div class="order-line total">
+        <span>Total</span>
+        <span id="summary-total">$60/mo</span>
+      </div>
+
+      <button class="btn btn-primary" id="checkout-btn" disabled>
+        <span id="checkout-btn-text">Continue to Payment →</span>
+      </button>
+
+      <p class="secure-badge">Secure checkout powered by Stripe</p>
+    </div>
+
+    <div class="guarantee">
+      <h4>💰 7-Day Money-Back Guarantee</h4>
+      <p>Not happy? Get a full refund within 7 days, no questions asked.</p>
+    </div>
+  </div>
+
+  <script>
+    // Plan selection
+    const plans = {
+      free: { name: 'Free', price: 0 },
+      byok: { name: 'BYOK', price: 19 },
+      premium: { name: 'Premium', price: 60 }
+    };
+
+    let selectedPlan = null;
+    const emailInput = document.getElementById('email');
+    const checkoutBtn = document.getElementById('checkout-btn');
+    const summaryPlan = document.getElementById('summary-plan');
+    const summaryPrice = document.getElementById('summary-price');
+    const summaryTotal = document.getElementById('summary-total');
+
+    // Check URL params for pre-selected plan
+    const urlParams = new URLSearchParams(window.location.search);
+    const planParam = urlParams.get('plan');
+    if (planParam && plans[planParam]) {
+      selectPlan(planParam);
+    } else {
+      selectPlan('premium');
+    }
+
+    // Plan card click handlers
+    document.querySelectorAll('.plan-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const plan = card.dataset.plan;
+        selectPlan(plan);
+      });
+    });
+
+    function selectPlan(plan) {
+      selectedPlan = plan;
+      
+      // Update UI
+      document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById(`plan-${plan}`).classList.add('selected');
+      
+      // Update summary
+      const planData = plans[plan];
+      summaryPlan.textContent = planData.name;
+      summaryPrice.textContent = planData.price === 0 ? 'Free' : `$${planData.price}/mo`;
+      summaryTotal.textContent = planData.price === 0 ? 'Free' : `$${planData.price}/mo`;
+      
+      updateCheckoutButton();
+    }
+
+    // Email validation
+    emailInput.addEventListener('input', updateCheckoutButton);
+
+    function updateCheckoutButton() {
+      const email = emailInput.value;
+      const isValidEmail = email && email.includes('@') && email.includes('.');
+      const isFree = selectedPlan === 'free';
+      checkoutBtn.disabled = !selectedPlan || (!isFree && !isValidEmail);
+      const btnText = document.getElementById('checkout-btn-text');
+      if (btnText) btnText.textContent = isFree ? 'Get started free →' : 'Continue to Payment →';
+    }
+
+    // Checkout button
+    checkoutBtn.addEventListener('click', () => {
+      if (!selectedPlan) return;
+      if (selectedPlan === 'free') {
+        window.location.href = '/';
+        return;
+      }
+      if (!emailInput.value) return;
+      
+      // TODO: Replace with actual Stripe checkout
+      const plan = selectedPlan;
+      
+      alert(`Payment coming soon!\n\nPlan: ${plans[plan].name}\nEmail: ${emailInput.value}\n\nWe'll notify you when checkout is ready.`);
+      // Future: window.location.href = `/api/checkout?plan=${plan}&email=${encodeURIComponent(emailInput.value)}`;
+    });
+  </script>
+</Layout>

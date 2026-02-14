@@ -16,3 +16,6 @@ node_modules/
 
 # Landing node_modules
 landing/node_modules/
+
+# User data (instance configs, profiles - don't commit)
+data/

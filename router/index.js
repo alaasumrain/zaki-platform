@@ -10,10 +10,14 @@ const DATA_DIR = '/var/zaki-platform/users';
 
 const docker = new Docker();
 const bot = new Bot(BOT_TOKEN);
+const { recordUsage } = require('./usage-tracker');
 
 // Track user -> port mapping
 const userPorts = new Map();
 let nextPort = BASE_PORT + 1;
+
+// Track conversation history per user (keeps last 20 messages)
+const conversationHistory = new Map();
 
 async function loadUserMappings() {
   try {
@@ -43,6 +47,59 @@ async function getContainer(userId) {
   } catch (e) {
     return { container: null, running: false };
   }
+}
+
+/**
+ * Split response at sentence boundaries (better than arbitrary split)
+ */
+function splitResponse(text, maxLength = 4000) {
+  if (text.length <= maxLength) return [text];
+  
+  // Try to split at sentence boundaries
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  const chunks = [];
+  let currentChunk = '';
+  
+  for (const sentence of sentences) {
+    if ((currentChunk + sentence).length > maxLength) {
+      if (currentChunk) chunks.push(currentChunk.trim());
+      currentChunk = sentence;
+    } else {
+      currentChunk += sentence;
+    }
+  }
+  if (currentChunk) chunks.push(currentChunk.trim());
+  
+  return chunks.length > 0 ? chunks : [text];
+}
+
+/**
+ * Wait for OpenClaw gateway to be ready (health check)
+ * Returns true when ready, false if timeout
+ */
+async function waitForGatewayReady(port, maxWait = 30) {
+  for (let i = 0; i < maxWait; i++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1000);
+      
+      const response = await fetch(`http://127.0.0.1:${port}/health`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        console.log(`✅ Gateway ready on port ${port} after ${i + 1}s`);
+        return true;
+      }
+    } catch (e) {
+      // Not ready yet, continue waiting
+    }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  console.warn(`⚠️ Gateway on port ${port} not ready after ${maxWait}s`);
+  return false;
 }
 
 async function provisionContainer(userId, userInfo) {
@@ -196,7 +253,7 @@ Personal assistant to ${userInfo.firstName || 'this user'}.
   }
   await fs.chmod(`${userDataDir}/.openclaw/openclaw.json`, 0o666);
   
-  // Create container with WORKING settings
+  // Create container with WORKING settings + Resource Quotas
   const container = await docker.createContainer({
     Image: 'alpine/openclaw:latest',
     name: containerName,
@@ -206,13 +263,25 @@ Personal assistant to ${userInfo.firstName || 'this user'}.
       'NODE_OPTIONS=--max-old-space-size=1024'
     ],
     HostConfig: {
+      // Memory limits (2GB)
       Memory: 2 * 1024 * 1024 * 1024, // 2GB
+      MemorySwap: 2 * 1024 * 1024 * 1024, // Same as memory (no swap)
+      // CPU limits (2 CPUs)
+      CpuQuota: 200000, // 2 CPUs (100000 = 1 CPU)
+      CpuPeriod: 100000,
+      // PID limit (prevent fork bombs)
+      PidsLimit: 100,
+      // Port bindings
       PortBindings: { '18789/tcp': [{ HostPort: String(port) }] },
+      // Volume mounts
       Binds: [
         `${userDataDir}/.openclaw:/home/node/.openclaw:rw`,
         `${userDataDir}/workspace:/home/node/workspace:rw`
       ],
-      RestartPolicy: { Name: 'unless-stopped' }
+      // Restart policy
+      RestartPolicy: { Name: 'unless-stopped' },
+      // Security options
+      SecurityOpt: ['no-new-privileges']
     }
   });
   
@@ -224,41 +293,122 @@ Personal assistant to ${userInfo.firstName || 'this user'}.
   
   console.log(`Container ${containerName} started on port ${port}`);
   
-  // Wait for gateway to be ready (takes ~30s to fully start)
+  // Wait for gateway to be ready (health check instead of fixed wait)
   console.log('Waiting for gateway to start...');
-  await new Promise(r => setTimeout(r, 35000));
+  const ready = await waitForGatewayReady(port, 40); // Max 40s wait
+  if (!ready) {
+    console.warn(`⚠️ Gateway on port ${port} not ready after 40s, but continuing...`);
+  }
   
   return info;
 }
 
-async function sendToContainer(userId, message, info) {
+async function sendToContainer(userId, message, info, retries = 3) {
   const url = `http://127.0.0.1:${info.port}/v1/chat/completions`;
   
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${info.token}`
-      },
-      body: JSON.stringify({
-        model: 'openclaw',
-        user: userId,
-        messages: [{ role: 'user', content: message }]
-      })
-    });
-    
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+  // Load conversation history for this user
+  let history = conversationHistory.get(userId) || [];
+  
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      // Create timeout controller
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+      
+      // Build messages array with conversation history
+      const messages = [
+        ...history,
+        { role: 'user', content: message }
+      ];
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${info.token}`
+        },
+        body: JSON.stringify({
+          model: 'openclaw',
+          user: userId,
+          messages: messages  // Include conversation history
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const text = await response.text();
+        
+        // Check for session lock errors
+        if (text.includes('session file locked') || text.includes('timeout')) {
+          console.warn(`[Attempt ${attempt + 1}/${retries}] Session lock detected for user ${userId}, retrying...`);
+          if (attempt < retries - 1) {
+            await new Promise(r => setTimeout(r, 2000 * (attempt + 1))); // Exponential backoff
+            continue;
+          }
+          // Last attempt failed - try to clean locks
+          console.log(`Cleaning stale locks for user ${userId}...`);
+          try {
+            const { exec } = require('child_process');
+            exec(`docker exec zaki-user-${userId} find /home/node/.openclaw -name "*.lock" -mmin +30 -delete 2>/dev/null || true`, () => {});
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+          return `⚠️ Session busy. Please try again in a moment. If this persists, the AI might be processing another request.`;
+        }
+        
+        throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+      }
+      
+      const data = await response.json();
+      
+      // Extract response text
+      const responseText = data.choices?.[0]?.message?.content || 'No response';
+      
+      // Update conversation history
+      history.push({ role: 'user', content: message });
+      history.push({ role: 'assistant', content: responseText });
+      // Keep last 20 messages (prevent context overflow)
+      conversationHistory.set(userId, history.slice(-20));
+      
+      // Record usage from OpenClaw response (non-blocking)
+      // Format: { choices: [...], usage: { prompt_tokens, completion_tokens, total_tokens } }
+      if (data.usage) {
+        recordUsage(userId, data).catch(err => {
+          console.error(`[Usage] Error recording usage:`, err.message);
+        });
+      }
+      
+      return responseText;
+    } catch (e) {
+      if (e.name === 'AbortError' || e.message.includes('timeout')) {
+        if (attempt < retries - 1) {
+          console.warn(`[Attempt ${attempt + 1}/${retries}] Timeout for user ${userId}, retrying...`);
+          await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+          continue;
+        }
+        return `⏱️ Request timed out. The AI might be busy. Please try again.`;
+      }
+      
+      if (attempt === retries - 1) {
+        console.error(`Error sending to container after ${retries} attempts: ${e.message}`);
+        if (e.message.includes('ECONNREFUSED') || e.message.includes('fetch failed')) {
+          return `🔄 Your AI is starting up... please try again in 30 seconds.`;
+        } else if (e.message.includes('timeout') || e.name === 'AbortError') {
+          return `⏱️ The AI is taking longer than usual. This might be a complex request. Try again?`;
+        } else if (e.message.includes('session file locked')) {
+          return `⚠️ Your AI is busy processing another request. Please wait a moment.`;
+        }
+        return `❌ Something went wrong. Please try again or use /help for support.`;
+      }
+      
+      // Retry on other errors
+      await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
     }
-    
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || 'No response';
-  } catch (e) {
-    console.error(`Error sending to container: ${e.message}`);
-    return `Still warming up... try again in 30 secs 🔄`;
   }
+  
+  return `Still warming up... try again in 30 secs 🔄`;
 }
 
 bot.on('message:text', async (ctx) => {
@@ -270,7 +420,8 @@ bot.on('message:text', async (ctx) => {
     username: ctx.from.username
   };
   
-  console.log(`[${new Date().toISOString()}] Message from ${userId} (${userInfo.firstName}): ${text.substring(0, 50)}...`);
+  console.log(`[${new Date().toISOString()}] 📨 Message from ${userId} (${userInfo.firstName}): ${text.substring(0, 50)}...`);
+  console.log(`  → Routing to container via Zaki Setup Assistant → zaki-user-${userId}`);
   
   let info = userPorts.get(userId);
   
@@ -293,7 +444,11 @@ bot.on('message:text', async (ctx) => {
       if (container) {
         try {
           await container.start();
-          await new Promise(r => setTimeout(r, 30000)); // Wait for startup
+          // Wait for gateway to be ready (health check instead of fixed wait)
+          const ready = await waitForGatewayReady(info.port);
+          if (!ready) {
+            await ctx.reply('⏱️ Taking longer than expected... still starting up.');
+          }
         } catch (e) {
           console.error(`Failed to start container: ${e.message}`);
         }
@@ -305,16 +460,15 @@ bot.on('message:text', async (ctx) => {
   }
   
   // Send to container and get response
+  console.log(`  → Sending to container on port ${info.port}...`);
   const response = await sendToContainer(userId, text, info);
+  console.log(`  ← Response received (${response.length} chars)`);
   
-  // Split long responses
-  if (response.length > 4000) {
-    const chunks = response.match(/.{1,4000}/gs) || [response];
-    for (const chunk of chunks) {
-      await ctx.reply(chunk);
-    }
-  } else {
-    await ctx.reply(response);
+  // Split long responses (sentence-aware)
+  const chunks = splitResponse(response);
+  for (let i = 0; i < chunks.length; i++) {
+    const prefix = chunks.length > 1 ? `[${i + 1}/${chunks.length}] ` : '';
+    await ctx.reply(prefix + chunks[i]);
   }
 });
 
@@ -354,6 +508,9 @@ bot.command('reset', async (ctx) => {
     return;
   }
   
+  // Clear conversation history
+  conversationHistory.delete(userId);
+  
   // Send /new to the container to reset session
   await sendToContainer(userId, '/new', info);
   await ctx.reply('Fresh start. What\'s on your mind?');
@@ -366,9 +523,74 @@ bot.command('help', async (ctx) => {
 /start - Welcome message
 /status - Check your AI status
 /reset - Fresh conversation (clears context)
+/usage - Check your usage stats
 /help - This message
 
 Just text me anything else - I'm here to help.`);
+});
+
+// Handle /usage command
+bot.command('usage', async (ctx) => {
+  const userId = String(ctx.from.id);
+  
+  try {
+    // Try to load usage service
+    const { initUsageService } = require('./usage-tracker');
+    const service = initUsageService();
+    
+    if (!service) {
+      await ctx.reply(`**Usage Stats** 📊\n\n_Usage tracking is being set up. Check back soon!_`);
+      return;
+    }
+    
+    const stats = await service.getUserStats(userId, 30);
+    
+    if (stats.totalRequests === 0) {
+      await ctx.reply(`**Usage Stats** 📊\n\n_No usage recorded yet. Start chatting to see your stats!_\n\nDuring beta, enjoy unlimited conversations! 🎉`);
+      return;
+    }
+    
+    // Format stats
+    const totalTokens = stats.totalInputTokens + stats.totalOutputTokens;
+    const avgTokensPerRequest = Math.round(totalTokens / stats.totalRequests);
+    
+    let message = `**Usage Stats (Last 30 Days)** 📊\n\n`;
+    message += `**Overview:**\n`;
+    message += `• Requests: ${stats.totalRequests.toLocaleString()}\n`;
+    message += `• Total Tokens: ${totalTokens.toLocaleString()}\n`;
+    message += `  └ Input: ${stats.totalInputTokens.toLocaleString()}\n`;
+    message += `  └ Output: ${stats.totalOutputTokens.toLocaleString()}\n`;
+    message += `• Avg per Request: ${avgTokensPerRequest.toLocaleString()} tokens\n`;
+    
+    if (stats.totalCost > 0) {
+      message += `• Estimated Cost: $${stats.totalCost.toFixed(4)}\n`;
+    }
+    
+    // Show top models
+    if (stats.byModel.length > 0) {
+      message += `\n**By Model:**\n`;
+      const topModels = stats.byModel
+        .sort((a, b) => b.requests - a.requests)
+        .slice(0, 5);
+      
+      for (const model of topModels) {
+        const modelTokens = model.inputTokens + model.outputTokens;
+        message += `• ${model.model} (${model.provider}):\n`;
+        message += `  ${model.requests} requests, ${modelTokens.toLocaleString()} tokens`;
+        if (model.cost > 0) {
+          message += `, $${model.cost.toFixed(4)}`;
+        }
+        message += `\n`;
+      }
+    }
+    
+    message += `\n_Stats update in real-time as you chat._`;
+    
+    await ctx.reply(message);
+  } catch (error) {
+    console.error('Error fetching usage:', error);
+    await ctx.reply(`**Usage Stats** 📊\n\n_Sorry, couldn't fetch your stats right now. Please try again later._`);
+  }
 });
 
 async function main() {

@@ -1,124 +1,233 @@
-# Next Steps - Implementation Plan
+# Next Steps - What to Do Now
 
-**Date:** 2026-02-03  
-**Status:** Ready to implement based on Moltworker learnings
-
----
-
-## 🎯 Immediate Next Steps (Priority Order)
-
-### Step 1: Create Dockerfile ✅ IN PROGRESS
-**Why:** Need container image with OpenClaw pre-installed  
-**Based on:** Moltworker's Dockerfile  
-**Time:** 30 minutes
-
-**What to do:**
-- Base image: `cloudflare/sandbox:0.7.0`
-- Install Node.js 22
-- Install OpenClaw (clawdbot) globally
-- Create directories
-- Copy startup script
+**Date:** 2026-02-10  
+**Status:** All features implemented ✅
 
 ---
 
-### Step 2: Create Startup Script
-**Why:** Need script to configure and start OpenClaw Gateway per user  
-**Based on:** Moltworker's `start-moltbot.sh` (simplified)  
-**Time:** 1 hour
+## ✅ What We've Done
 
-**What to do:**
-- Restore config from R2 (per-user prefix)
-- Configure from environment variables
-- Start gateway: `clawdbot gateway --port 18789`
+1. **Implemented all 5 top features:**
+   - ✅ Session Lock Manager
+   - ✅ Health Check Hierarchy
+   - ✅ Actionable Error Messages
+   - ✅ ResourceQuota per User
+   - ✅ Auto-Scroll Component
 
----
-
-### Step 3: Update wrangler.toml
-**Why:** Need container configuration for Sandboxes  
-**Based on:** Moltworker's `wrangler.jsonc`  
-**Time:** 15 minutes
-
-**What to do:**
-- Add `containers` section with Dockerfile
-- Add `durable_objects` for Sandbox binding
-- Add migrations
-- Add R2 bucket binding (already done)
-- Add browser binding (optional, for browser automation)
+2. **Configured bot:**
+   - ✅ Bot name: "Zaki - Setup Assistant"
+   - ✅ Auto-configuration on server start
+   - ✅ Updated all references
 
 ---
 
-### Step 4: Fix Sandbox Manager
-**Why:** Current code uses wrong APIs  
-**Based on:** Moltworker's `gateway/r2.ts` and `gateway/process.ts`  
-**Time:** 1 hour
+## 🚀 Immediate Next Steps
 
-**What to do:**
-- Replace mount options with `sandbox.mountBucket()`
-- Replace exec with `sandbox.startProcess()`
-- Add process management (listProcesses, waitForPort)
-- Add R2 mounting per user
+### 1. Configure the Bot (If Not Done Yet)
 
----
+The bot will auto-configure on server start, but you can also do it manually:
 
-### Step 5: Fix API Endpoints
-**Why:** Need to proxy requests correctly  
-**Based on:** Moltworker's `index.ts`  
-**Time:** 1 hour
+```bash
+cd /root/zaki-platform
+export TELEGRAM_BOT_TOKEN=your-token-here
+tsx scripts/configure-bot.ts
+```
 
-**What to do:**
-- Replace placeholder code with `sandbox.containerFetch()`
-- Add WebSocket support with `sandbox.wsConnect()`
-- Route to correct user Sandbox
-- Handle loading states
+**Verify it worked:**
+- Search for `@zakified_bot` in Telegram
+- Should see "Zaki - Setup Assistant" as the name
+- Description should explain setup process
 
 ---
 
-### Step 6: Test Single Sandbox
-**Why:** Verify everything works  
-**Time:** 1-2 hours
+### 2. Test the New Features
 
-**What to do:**
-- Deploy to Cloudflare
-- Test `/health` endpoint
-- Test `/api/chat` endpoint
-- Test Sandbox initialization
-- Verify OpenClaw Gateway starts
-- Test message flow
+#### A. Health Checks
+```bash
+# Test health endpoints
+curl http://localhost:3000/health/live
+curl http://localhost:3000/health/ready
+curl http://localhost:3000/health/startup
+curl http://localhost:3000/health
+```
 
----
+**Expected:** All should return 200 with health status
 
-## 📋 Implementation Checklist
+#### B. Session Lock Manager
+- Test with concurrent requests to same user
+- Should handle locks gracefully
+- Check logs for lock cleanup
 
-### Phase 1: Infrastructure Setup
-- [ ] Create Dockerfile
-- [ ] Create startup script
-- [ ] Update wrangler.toml
-- [ ] Test Dockerfile builds
+#### C. Actionable Errors
+- Trigger an error (e.g., invalid bot token)
+- Should see user-friendly error with actions
+- Check Telegram messages for formatted errors
 
-### Phase 2: Sandbox Implementation
-- [ ] Fix R2 mounting (use mountBucket)
-- [ ] Fix process management (use startProcess)
-- [ ] Add process status checking
-- [ ] Add per-user Sandbox isolation
+#### D. Resource Quotas
+```bash
+# Check container limits
+docker inspect zaki-user-123 | jq '.[0].HostConfig'
+```
 
-### Phase 3: API Implementation
-- [ ] Fix HTTP proxying (use containerFetch)
-- [ ] Add WebSocket proxying (use wsConnect)
-- [ ] Add loading page
-- [ ] Add error handling
-
-### Phase 4: Testing
-- [ ] Deploy to Cloudflare
-- [ ] Test single Sandbox
-- [ ] Test R2 mounting
-- [ ] Test OpenClaw Gateway
-- [ ] Test message flow
-- [ ] Test multi-user (if time)
+**Expected:** Should see:
+- Memory: 2GB
+- CPU: 2 cores
+- PIDs: 100
 
 ---
 
-## 🚀 Let's Start!
+### 3. Test End-to-End Onboarding
 
-**Starting with Step 1: Create Dockerfile**
+1. **Message @zakified_bot** (or your bot username)
+2. **Send `/start`**
+3. **Go through onboarding:**
+   - Language selection
+   - Name
+   - Purpose
+   - Style
+   - API keys (skip or add)
+   - Bot token (create via BotFather)
+4. **Verify:**
+   - Instance created
+   - Container running
+   - Bot configured
+   - Can chat with private bot
 
-This is the foundation - everything else depends on having a working container image.
+---
+
+### 4. Integrate Features into Router
+
+The session lock manager and actionable errors need to be integrated into the router:
+
+**File:** `router/index.js`
+
+**Add:**
+```javascript
+const { acquireSessionLock, cleanupStaleLocks } = require('../src/services/session-lock-manager');
+const { createActionableError, formatErrorForTelegram } = require('../src/utils/actionable-errors');
+
+// In sendToContainer function:
+try {
+  // Use session lock before accessing session
+  const lock = await acquireSessionLock(sessionPath);
+  // ... send message
+  await lock.release();
+} catch (error) {
+  const actionable = createActionableError(error, { userId, requestId });
+  return formatErrorForTelegram(actionable);
+}
+```
+
+---
+
+### 5. Integrate Auto-Scroll into Dashboard
+
+**File:** `zaki-dashboard/src/features/Conversation/ChatList/`
+
+**Add:**
+```tsx
+import AutoScroll from '@/components/AutoScroll';
+import BackBottom from '@/components/AutoScroll/BackBottom';
+
+// In ChatList component:
+<ChatList>
+  {messages.map(msg => <Message key={msg.id} {...msg} />)}
+  <AutoScroll
+    isGenerating={isGenerating}
+    atBottom={atBottom}
+    isScrolling={isScrolling}
+    scrollToBottom={scrollToBottom}
+    lastMessageLength={lastMessage?.content?.length || 0}
+  />
+</ChatList>
+
+<BackBottom
+  visible={!atBottom}
+  onClick={() => scrollToBottom(true)}
+/>
+```
+
+---
+
+## 📋 Testing Checklist
+
+- [ ] Bot name shows as "Zaki - Setup Assistant" in Telegram
+- [ ] Health checks return proper status
+- [ ] Session locks prevent conflicts
+- [ ] Error messages are user-friendly
+- [ ] Containers have resource limits
+- [ ] Onboarding flow works end-to-end
+- [ ] Auto-scroll works in dashboard (if dashboard is running)
+- [ ] All features integrated and tested
+
+---
+
+## 🔧 Optional Improvements
+
+### 1. Add Monitoring
+- Set up alerts for health check failures
+- Monitor resource usage per user
+- Track session lock conflicts
+
+### 2. Add Logging
+- Structured logging with request IDs
+- Correlation IDs for tracing
+- Error tracking
+
+### 3. Add Metrics
+- Request rate per user
+- Error rate
+- Response time
+- Resource usage
+
+### 4. Dashboard Integration
+- Show health status in dashboard
+- Display resource usage
+- Show error history
+
+---
+
+## 🎯 Priority Order
+
+1. **Test bot configuration** (5 min)
+2. **Test health checks** (5 min)
+3. **Test onboarding flow** (10 min)
+4. **Integrate session locks** (15 min)
+5. **Integrate actionable errors** (15 min)
+6. **Test resource quotas** (5 min)
+7. **Integrate auto-scroll** (if dashboard ready) (20 min)
+
+**Total:** ~1 hour to fully test and integrate everything
+
+---
+
+## 🚨 If Something Breaks
+
+1. **Check logs:**
+   ```bash
+   tail -f /tmp/zaki-platform-server.log
+   ```
+
+2. **Check health:**
+   ```bash
+   curl http://localhost:3000/health
+   ```
+
+3. **Check containers:**
+   ```bash
+   docker ps | grep zaki
+   ```
+
+4. **Restart server:**
+   ```bash
+   # Stop
+   pkill -f "npm run dev"
+   
+   # Start
+   cd /root/zaki-platform
+   npm run dev
+   ```
+
+---
+
+**Status:** Ready to test! Start with bot configuration, then test features one by one. 🦞

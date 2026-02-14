@@ -1,11 +1,12 @@
 {
   "name": "zaki-platform",
   "version": "0.1.0",
-  "description": "Multi-tenant personal AI assistant platform - OpenClaw on Cloudflare Workers",
+  "description": "Multi-tenant personal AI assistant platform - OpenClaw on VM",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
     "type-check": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -16,22 +17,24 @@
     "ai",
     "agent",
     "openclaw",
-    "cloudflare",
-    "workers",
-    "multi-tenant"
+    "vm",
+    "multi-tenant",
+    "telegram-bot"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@cloudflare/sandbox": "^0.7.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@types/express": "^5.0.6",
     "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.1",
+    "express": "^5.2.1",
     "hono": "^4.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260131.0",
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.33",
     "dotenv": "^17.2.3",
     "pg": "^8.18.0",
     "tsx": "^4.21.0",

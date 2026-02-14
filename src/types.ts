@@ -1,20 +1,27 @@
-import type { Sandbox } from '@cloudflare/sandbox';
+/**
+ * VM-based Environment Configuration
+ * No Cloudflare dependencies
+ */
 
 export interface Env {
-  Sandbox: DurableObjectNamespace<Sandbox>;
-  UserStorage: R2Bucket;
-  BROWSER?: Fetcher; // Browser Rendering binding (optional)
+  // API Keys
   ANTHROPIC_API_KEY?: string;
-  AI_GATEWAY_BASE_URL?: string;
-  AI_GATEWAY_API_KEY?: string;
+  OPENAI_API_KEY?: string;
+  GOOGLE_API_KEY?: string;
+  
+  // Gateway Configuration
   GATEWAY_TOKEN?: string;
-  CF_ACCESS_TEAM_DOMAIN?: string;
-  CF_ACCESS_AUD?: string;
+  DEFAULT_MODEL?: string;
+  
+  // Server Configuration
+  PORT?: string;
+  NODE_ENV?: string;
+  
+  // Telegram
+  TELEGRAM_BOT_TOKEN?: string;
+  
+  // Development
   DEV_MODE?: string;
-  // R2 mounting credentials (required for R2 mounting)
-  R2_ACCESS_KEY_ID?: string;
-  R2_SECRET_ACCESS_KEY?: string;
-  CF_ACCOUNT_ID?: string;
 }
 
 export interface UserSandbox {

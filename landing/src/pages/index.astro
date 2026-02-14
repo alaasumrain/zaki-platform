@@ -15,27 +15,24 @@ const platforms = [
 ];
 
 const features = [
-  { title: 'Zaki, Pre-Configured', desc: 'Node.js 22, gateway, workspace, browser automation—all set up and ready. Connect your platforms and go.', icon: '⚡' },
-  { title: 'Your API Keys, Your Instance', desc: 'Bring your Anthropic or OpenAI key. Your Zaki runs fully isolated—we never see your conversations.', icon: '🔐' },
-  { title: 'One-Click Connections', desc: 'Connect WhatsApp, Telegram, Discord, or Slack from your dashboard. No terminal commands, no config files.', icon: '🔗' },
-  { title: 'Simple Dashboard', desc: 'Manage your instance, connect platforms, and update settings through an easy-to-use web dashboard.', icon: '📊' },
-  { title: 'Web & Computer Use', desc: 'Browser automation baked in. Your Zaki can browse sites, fill forms, and fetch live data out of the box.', icon: '🌐' },
-  { title: 'Your Own VPS', desc: 'Your own isolated instance—not a shared container. Consistent performance with full process isolation.', icon: '🖥️' },
+  { title: 'Where you already are', desc: 'Talk on Telegram and WhatsApp. No new app to learn.', icon: '💬' },
+  { title: 'Reminders & tasks', desc: 'Tell it what you need; it follows up and gets it done.', icon: '✅' },
+  { title: 'Your data, private', desc: 'Your agent runs in your own space. We don\'t read your conversations.', icon: '🔐' },
+  { title: 'Ready in a minute', desc: 'Sign up, connect your chat, start. No setup hassle.', icon: '⚡' },
 ];
 
 const faqs = [
-  { q: 'Is Zaki the same as OpenClaw/Clawdbot?', a: 'Zaki is built on OpenClaw technology but fully managed—we handle all the infrastructure so you can focus on using your AI assistant.' },
-  { q: 'What\'s the easiest way to run Zaki?', a: 'Sign up, paste your API key, connect your platforms, and start chatting. Under 60 seconds, no technical knowledge required.' },
-  { q: 'Do I need my own API keys?', a: 'Free uses Kimi (no key needed). BYOK ($19) = bring your own keys. Premium ($60) = we provide Claude, no keys needed.' },
+  { q: 'What is Zaki?', a: 'Your personal AI agent for daily life and work. Tell it what you need—reminders, tasks, questions—and it handles it on Telegram and WhatsApp.' },
+  { q: 'Is it free?', a: 'You can start free with your own agent. Pro plans give you more memory, more actions, and faster execution.' },
+  { q: 'Do I need my own API keys?', a: 'Free and BYOK: use your own keys if you want. Premium: we include a top model so you don\'t need to bring keys.' },
+  { q: 'Is my data private?', a: 'Yes. Your agent runs in your own space. We don\'t read your conversations.' },
+  { q: 'What can it do?', a: 'Reminders, follow-ups, quick research, tasks, and chat. It gets things done so you don\'t have to remember everything.' },
   { q: 'What platforms can I connect?', a: 'WhatsApp, Telegram, Discord, and Slack. Connect as many as you want from your dashboard.' },
-  { q: 'Can I self-host instead?', a: 'Absolutely! Check out OpenClaw docs at docs.openclaw.ai for self-hosting guides.' },
-  { q: 'Is my data private?', a: 'Yes. Your instance is fully isolated. We never see your conversations or API keys.' },
   { q: 'What happens if I cancel?', a: 'Cancel anytime. We offer a 7-day money-back guarantee, no questions asked.' },
-  { q: 'Does Zaki work with Claude, GPT, or other models?', a: 'Yes! Bring any OpenAI-compatible API key. Claude, GPT-4, and more all work.' },
 ];
 ---
 
-<Layout title="Zaki — Run OpenClaw. Skip the Setup.">
+<Layout title="Zaki — Your personal AI agent. Tell it what you need, it handles it.">
   <style>
     :root {
       --bg-deep: #0a0a0f;
@@ -610,19 +607,19 @@ const faqs = [
     <!-- Hero -->
     <section class="hero">
       <div class="container">
-        <div class="hero-badge">☁️ The easiest way to deploy OpenClaw</div>
-        <h1>Run <span>Zaki</span>.<br/>Skip the Setup.</h1>
+        <div class="hero-badge">Your personal AI agent</div>
+        <h1>Tell it what you need.<br/>It handles it.</h1>
         <p class="hero-subtitle">
-          Managed hosting for your personal AI assistant. No VPS. No Docker. No SSH.<br/>
-          Just your AI, ready to go.
+          Your personal AI agent for daily life and work. Reminders, tasks, and chat on Telegram and WhatsApp—your own agent, always on.
         </p>
         <div class="hero-buttons">
-          <a href="#pricing" class="btn btn-primary">Deploy Zaki →</a>
-          <a href="#how" class="btn btn-secondary">See How It Works</a>
+          <a href="#pricing" class="btn btn-primary">Get started free</a>
+          <a href="#how" class="btn btn-secondary">See how it works</a>
         </div>
         <div class="hero-stats">
-          <div class="hero-stat"><span class="hero-stat-value">✓ Live in 60 seconds</span></div>
-          <div class="hero-stat"><span class="hero-stat-value">✓ Your keys, your data</span></div>
+          <div class="hero-stat"><span class="hero-stat-value">✓ Your own agent</span></div>
+          <div class="hero-stat"><span class="hero-stat-value">✓ Telegram & WhatsApp</span></div>
+          <div class="hero-stat"><span class="hero-stat-value">✓ Live in under a minute</span></div>
         </div>
         <div class="platform-pills">
           <div class="platform-pill">
@@ -645,20 +642,20 @@ const faqs = [
       </div>
     </section>
 
-    <!-- How to Deploy -->
+    <!-- How it works -->
     <section id="how" class="container">
       <div class="text-center section-header">
-        <div class="section-badge">3 simple steps</div>
-        <h2 class="section-title">How to Deploy <span>Zaki</span></h2>
-        <p class="section-subtitle">No DevOps. No terminal. No headaches.</p>
+        <div class="section-badge">3 steps</div>
+        <h2 class="section-title">Simple from day one</h2>
+        <p class="section-subtitle">One agent that remembers, reminds, and gets things done—where you already chat.</p>
       </div>
       
       <div class="steps">
         <div class="step">
           <div>
             <div class="step-number">01</div>
-            <h3 class="step-title">Add Your API Key</h3>
-            <p class="step-desc">Sign up and paste your Anthropic or OpenAI key. That's the only configuration you'll ever need.</p>
+            <h3 class="step-title">Sign up</h3>
+            <p class="step-desc">Free to start. Connect with Telegram or WhatsApp.</p>
           </div>
           <div class="step-visual">
             <div class="step-visual-header">
@@ -678,8 +675,8 @@ const faqs = [
         <div class="step">
           <div>
             <div class="step-number">02</div>
-            <h3 class="step-title">Connect Your Platforms</h3>
-            <p class="step-desc">Link WhatsApp, Telegram, Discord, or Slack with a single click. No SSH, no config files.</p>
+            <h3 class="step-title">Tell Zaki what you need</h3>
+            <p class="step-desc">Reminders, research, tasks. In plain language.</p>
           </div>
           <div class="step-visual">
             <div class="step-visual-header">
@@ -712,8 +709,8 @@ const faqs = [
         <div class="step">
           <div>
             <div class="step-number">03</div>
-            <h3 class="step-title">Start Chatting</h3>
-            <p class="step-desc">Your Zaki is live and ready. Message it from any connected platform—it just works.</p>
+            <h3 class="step-title">It handles it</h3>
+            <p class="step-desc">Your agent works in the background and pings you when it's done or when you need to decide.</p>
           </div>
           <div class="step-visual">
             <div class="step-visual-header">
@@ -731,12 +728,12 @@ const faqs = [
       </div>
     </section>
 
-    <!-- One-Click Integration -->
+    <!-- Platforms -->
     <section class="container">
       <div class="text-center section-header">
-        <div class="section-badge">One-click integration</div>
-        <h2 class="section-title">One-Click Platform <span>Integration</span></h2>
-        <p class="section-subtitle">Connect all your messaging platforms from our dashboard. No terminal. No config files.</p>
+        <div class="section-badge">Where you chat</div>
+        <h2 class="section-title">Where you already chat</h2>
+        <p class="section-subtitle">One agent, same conversations on Telegram and WhatsApp. More platforms coming.</p>
       </div>
       
       <div class="platform-grid">
@@ -756,9 +753,9 @@ const faqs = [
     <!-- Features -->
     <section class="container">
       <div class="text-center section-header">
-        <div class="section-badge">Fully managed infrastructure</div>
-        <h2 class="section-title">Everything Zaki Needs.<br/><span>Nothing You Have to Configure.</span></h2>
-        <p class="section-subtitle">We handle the infrastructure so you can focus on using Zaki, not maintaining it.</p>
+        <div class="section-badge">What you get</div>
+        <h2 class="section-title">Your agent. Your rules.</h2>
+        <p class="section-subtitle">One agent that remembers, reminds, and gets things done—where you already chat.</p>
       </div>
       
       <div class="features-grid">
@@ -798,78 +795,75 @@ const faqs = [
     <section id="pricing" class="container">
       <div class="text-center section-header">
         <div class="section-badge">Simple pricing</div>
-        <h2 class="section-title">Start Free. <span>Scale When Ready.</span></h2>
-        <p class="section-subtitle">No credit card required. Upgrade anytime.</p>
+        <h2 class="section-title">Plans that match how you use your agent</h2>
+        <p class="section-subtitle">Start free. Upgrade when you want more memory, more actions, and faster execution.</p>
       </div>
       
-      <div class="pricing-grid">
+      <div class="pricing-grid" style="max-width: 1000px; margin: 0 auto; grid-template-columns: repeat(3, 1fr);">
         <!-- Free Tier -->
         <div class="pricing-card">
           <div class="pricing-tier">Free</div>
           <div class="pricing-amount">$0</div>
           <div class="pricing-period">forever</div>
-          <div class="pricing-model">Powered by Kimi K2</div>
+          <div class="pricing-model">Your first agent, no credit card.</div>
           
           <div class="pricing-features">
-            <div class="pricing-feature">Your own Zaki instance</div>
-            <div class="pricing-feature">Telegram & Discord</div>
-            <div class="pricing-feature">No API key needed</div>
-            <div class="pricing-feature">Web browsing</div>
-            <div class="pricing-feature">Basic support</div>
+            <div class="pricing-feature">Your own personal agent</div>
+            <div class="pricing-feature">Telegram & WhatsApp</div>
+            <div class="pricing-feature">Reminders and basic tasks</div>
+            <div class="pricing-feature">Fair-use limits</div>
           </div>
           
-          <a href="#" class="btn btn-free" style="width: 100%;">Get Started Free</a>
+          <a href="/billing?plan=free" class="btn btn-secondary" style="width: 100%;">Get started</a>
         </div>
         
         <!-- BYOK Tier -->
         <div class="pricing-card">
-          <div class="pricing-tier">Bring Your Keys</div>
+          <div class="pricing-tier">BYOK</div>
           <div class="pricing-amount">$19</div>
           <div class="pricing-period">/month</div>
-          <div class="pricing-model">Use your own API keys</div>
+          <div class="pricing-model">Your keys, your models, no limits.</div>
           
           <div class="pricing-features">
             <div class="pricing-feature">Everything in Free</div>
-            <div class="pricing-feature">All platforms</div>
-            <div class="pricing-feature">Any model (Claude, GPT, etc)</div>
-            <div class="pricing-feature">Computer use & automation</div>
-            <div class="pricing-feature">2GB memory</div>
+            <div class="pricing-feature">Your own API keys (Claude, GPT, Gemini)</div>
+            <div class="pricing-feature">More memory, more actions</div>
+            <div class="pricing-feature">Full privacy — we never see your data</div>
           </div>
           
-          <a href="#" class="btn btn-free" style="width: 100%;">Start with BYOK</a>
+          <a href="/billing?plan=byok" class="btn btn-secondary" style="width: 100%;">Subscribe</a>
         </div>
         
         <!-- Premium Tier -->
         <div class="pricing-card featured">
-          <div class="pricing-badge">All Inclusive</div>
+          <div class="pricing-badge">Most popular</div>
           <div class="pricing-tier">Premium</div>
           <div class="pricing-amount">$60</div>
           <div class="pricing-period">/month</div>
-          <div class="pricing-model">Claude Sonnet included</div>
+          <div class="pricing-model">Top model included. Zero setup.</div>
           
           <div class="pricing-features">
             <div class="pricing-feature">Everything in BYOK</div>
-            <div class="pricing-feature">Claude Sonnet 4 included</div>
-            <div class="pricing-feature">No API key needed</div>
-            <div class="pricing-feature">Unlimited usage*</div>
-            <div class="pricing-feature">Priority support</div>
+            <div class="pricing-feature">Top-tier model included—no API key needed</div>
+            <div class="pricing-feature">More memory, faster execution</div>
+            <div class="pricing-feature">Priority support · Fair use</div>
           </div>
           
-          <a href="#" class="btn btn-primary" style="width: 100%;">Go Premium →</a>
+          <a href="/billing?plan=premium" class="btn btn-primary" style="width: 100%;">Subscribe</a>
           
-          <p class="pricing-note">7-day free trial · Cancel anytime</p>
+          <p class="pricing-note">7-day money-back guarantee</p>
         </div>
       </div>
       
-      <p style="text-align: center; color: var(--text-secondary); font-size: 13px; margin-top: 32px;">* Fair use policy applies</p>
+      <p style="text-align: center; color: var(--text-secondary); font-size: 14px; margin-top: 32px;">Your personal AI agent for daily life and work. Pro: more memory, more actions, faster execution.</p>
     </section>
 
     <!-- FAQ -->
     <section class="container">
       <div class="text-center section-header">
         <div class="section-badge">FAQ</div>
-        <h2 class="section-title">Frequently Asked <span>Questions</span></h2>
-        <p class="section-subtitle">Everything you need to know about hosting Zaki.</p>
+        <h2 class="section-title">Frequently asked <span>questions</span></h2>
+        <p class="section-subtitle">Everything you need to know about Zaki.</p>
       </div>
       
       <div class="faq-list">
@@ -885,17 +879,17 @@ const faqs = [
     <!-- CTA -->
     <section class="container cta">
       <div class="cta-box">
-        <h2 class="section-title">Ready to launch your <span>Zaki</span>?</h2>
-        <p class="section-subtitle" style="margin-bottom: 32px;">Deploy your personal AI assistant in under 60 seconds.</p>
-        <a href="#pricing" class="btn btn-primary">Start Free Trial →</a>
+        <h2 class="section-title">Ready for your own agent?</h2>
+        <p class="section-subtitle" style="margin-bottom: 32px;">Tell it what you need. It handles it. Get started in under a minute.</p>
+        <a href="#pricing" class="btn btn-primary">Get started free</a>
       </div>
     </section>
 
     <!-- Footer -->
     <footer>
       <div class="container">
-        <p>© 2025 Zaki. Your personal AI assistant.</p>
-        <p style="margin-top: 8px;">Built with ❤️ on OpenClaw technology.</p>
+        <p>© 2025 Zaki. Your personal AI agent for daily life and work.</p>
+        <p style="margin-top: 8px;"><a href="/enterprise" style="color: var(--text-secondary);">Teams & businesses</a></p>
       </div>
     </footer>
   </main>

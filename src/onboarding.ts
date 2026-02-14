@@ -10,12 +10,24 @@
 // ==========================================
 
 export interface OnboardingState {
-  step: 'language' | 'name' | 'purpose' | 'style' | 'interests' | 'complete';
+  step: 'language' | 'bot_token' | 'name' | 'purpose' | 'style' | 'interests' | 'api_keys' | 'template' | 'skills' | 'complete';
   language?: string;
+  botToken?: string;
+  botUsername?: string;
   name?: string;
   purpose?: string;
   style?: string;
   interests?: string;
+  apiKeys?: {
+    anthropic?: string;
+    openai?: string;
+    google?: string;
+    useShared?: boolean;
+  };
+  /** Template/preset name: general, developer, writer, etc. */
+  template?: string;
+  /** OpenClaw skills to install (e.g. github, tmux, coding-agent) */
+  skills?: string[];
 }
 
 export interface TelegramUser {
@@ -73,22 +85,91 @@ const t: Record<string, Record<string, string>> = {
 
   // Step 5: Interests
   'ask_interests': {
-    en: "Perfect! Last thing — tell me a bit about what you're into. What are your interests, hobbies, or what do you work on?\n\n_Just type freely, or skip with /skip_",
-    ar: "ممتاز! آخر شي — خبرني شوي عن اهتماماتك. شو هواياتك أو شو شغلك؟\n\n_اكتب براحتك، أو تخطى بـ /skip_",
-    de: "Perfekt! Letzte Frage — erzähl mir ein bisschen über dich. Was sind deine Interessen, Hobbys oder woran arbeitest du?\n\n_Schreib einfach drauflos, oder überspringe mit /skip_",
-    fr: "Parfait ! Dernière chose — parlez-moi de vos centres d'intérêt, hobbies, ou de votre travail.\n\n_Écrivez librement, ou passez avec /skip_",
-    es: "¡Perfecto! Última cosa — cuéntame sobre tus intereses, hobbies o en qué trabajas.\n\n_Escribe libremente, o salta con /skip_",
-    tr: "Mükemmel! Son bir şey — ilgi alanların, hobilerinin ya da ne üzerinde çalıştığın hakkında biraz anlat.\n\n_Rahatça yaz, ya da /skip ile atla_",
+    en: "Perfect! Tell me a bit about what you're into. What are your interests, hobbies, or what do you work on?\n\n_Just type freely, or skip with /skip_",
+    ar: "ممتاز! خبرني شوي عن اهتماماتك. شو هواياتك أو شو شغلك؟\n\n_اكتب براحتك، أو تخطى بـ /skip_",
+    de: "Perfekt! Erzähl mir ein bisschen über dich. Was sind deine Interessen, Hobbys oder woran arbeitest du?\n\n_Schreib einfach drauflos, oder überspringe mit /skip_",
+    fr: "Parfait ! Parlez-moi de vos centres d'intérêt, hobbies, ou de votre travail.\n\n_Écrivez librement, ou passez avec /skip_",
+    es: "¡Perfecto! Cuéntame sobre tus intereses, hobbies o en qué trabajas.\n\n_Escribe libremente, o salta con /skip_",
+    tr: "Mükemmel! İlgi alanların, hobilerinin ya da ne üzerinde çalıştığın hakkında biraz anlat.\n\n_Rahatça yaz, ya da /skip ile atla_",
+  },
+
+  // Step 6: API Keys (optional)
+  'ask_api_keys': {
+    en: "Great! 🎉\n\n**Optional:** Do you want to add your own API keys?\n\nYou can:\n• Use shared API keys (default) — free to use\n• Add your own keys — for higher limits and personal usage\n\n_Type /skip to use shared keys, or /add to add your own_",
+    ar: "ممتاز! 🎉\n\n**اختياري:** بدك تضيف مفاتيح API الخاصة فيك؟\n\nتقدر:\n• تستخدم المفاتيح المشتركة (افتراضي) — مجاني\n• تضيف مفاتيحك الخاصة — لحدود أعلى واستخدام شخصي\n\n_اكتب /skip عشان تستخدم المفاتيح المشتركة، أو /add عشان تضيف مفاتيحك_",
+    de: "Großartig! 🎉\n\n**Optional:** Möchtest du deine eigenen API-Schlüssel hinzufügen?\n\nDu kannst:\n• Geteilte API-Schlüssel verwenden (Standard) — kostenlos\n• Eigene Schlüssel hinzufügen — für höhere Limits und persönliche Nutzung\n\n_Tippe /skip für geteilte Schlüssel, oder /add für eigene_",
+    fr: "Parfait ! 🎉\n\n**Optionnel :** Voulez-vous ajouter vos propres clés API ?\n\nVous pouvez :\n• Utiliser les clés partagées (par défaut) — gratuit\n• Ajouter vos propres clés — pour des limites plus élevées et un usage personnel\n\n_Tapez /skip pour utiliser les clés partagées, ou /add pour ajouter les vôtres_",
+    es: "¡Genial! 🎉\n\n**Opcional:** ¿Quieres agregar tus propias claves API?\n\nPuedes:\n• Usar claves compartidas (por defecto) — gratis\n• Agregar tus propias claves — para límites más altos y uso personal\n\n_Escribe /skip para usar claves compartidas, o /add para agregar las tuyas_",
+    tr: "Harika! 🎉\n\n**İsteğe bağlı:** Kendi API anahtarlarınızı eklemek ister misiniz?\n\nYapabilirsiniz:\n• Paylaşılan API anahtarlarını kullanın (varsayılan) — ücretsiz\n• Kendi anahtarlarınızı ekleyin — daha yüksek limitler ve kişisel kullanım için\n\n_Paylaşılan anahtarlar için /skip yazın, veya kendi anahtarlarınız için /add yazın_",
+  },
+  
+  'ask_template': {
+    en: "**Choose a template** (or skip for default):",
+    ar: "**اختر قالباً** (أو تخطّ للافتراضي):",
+  },
+  'ask_skills': {
+    en: "**Add skills** to your assistant? (e.g. GitHub, coding, notes)\n\nType skills comma-separated, or /skip for default.",
+    ar: "**أضف مهارات** لمساعدك؟ (مثلاً GitHub، برمجة، ملاحظات)\n\nاكتب المهارات مفصولة بفاصلة، أو /skip للافتراضي.",
+  },
+  'template_general': { en: '🌟 General', ar: '🌟 عام' },
+  'template_developer': { en: '💻 Developer', ar: '💻 مطوّر' },
+  'template_writer': { en: '✍️ Writer', ar: '✍️ كاتب' },
+  'template_skip': { en: '⏭️ Skip', ar: '⏭️ تخطّ' },
+  'skills_skip': { en: '⏭️ Default skills', ar: '⏭️ مهارات افتراضية' },
+  'api_keys_instructions': {
+    en: "To add your API keys, send them in this format:\n\n`/anthropic YOUR_KEY`\n`/openai YOUR_KEY`\n`/google YOUR_KEY`\n\nOr send `/skip` to use shared keys.\n\n_Your keys are stored securely and only used for your instance._",
+    ar: "عشان تضيف مفاتيح API، أرسلها بهذا الشكل:\n\n`/anthropic YOUR_KEY`\n`/openai YOUR_KEY`\n`/google YOUR_KEY`\n\nأو أرسل `/skip` عشان تستخدم المفاتيح المشتركة.\n\n_مفاتيحك محفوظة بأمان ومستخدمة فقط لنسختك._",
+    de: "Um deine API-Schlüssel hinzuzufügen, sende sie in diesem Format:\n\n`/anthropic YOUR_KEY`\n`/openai YOUR_KEY`\n`/google YOUR_KEY`\n\nOder sende `/skip` für geteilte Schlüssel.\n\n_Deine Schlüssel werden sicher gespeichert und nur für deine Instanz verwendet._",
+    fr: "Pour ajouter vos clés API, envoyez-les dans ce format :\n\n`/anthropic YOUR_KEY`\n`/openai YOUR_KEY`\n`/google YOUR_KEY`\n\nOu envoyez `/skip` pour utiliser les clés partagées.\n\n_Vos clés sont stockées en toute sécurité et utilisées uniquement pour votre instance._",
+    es: "Para agregar tus claves API, envíalas en este formato:\n\n`/anthropic YOUR_KEY`\n`/openai YOUR_KEY`\n`/google YOUR_KEY`\n\nO envía `/skip` para usar claves compartidas.\n\n_Tus claves se almacenan de forma segura y solo se usan para tu instancia._",
+    tr: "API anahtarlarınızı eklemek için bunları bu formatta gönderin:\n\n`/anthropic YOUR_KEY`\n`/openai YOUR_KEY`\n`/google YOUR_KEY`\n\nVeya paylaşılan anahtarlar için `/skip` gönderin.\n\n_Anahtarlarınız güvenli bir şekilde saklanır ve yalnızca örneğiniz için kullanılır._",
+  },
+
+  // Bot token step
+  'ask_bot_token': {
+    en: "Perfect! 🎉\n\n**Privacy & Control:** For your privacy and full AI capabilities, you'll get your own private Telegram bot.\n\n**Step 1:** Open @BotFather → [Open BotFather](https://t.me/BotFather?start=start)\n\n**Step 2:** Send `/newbot`\n\n**Step 3:** Choose a name (anything you want)\n\n**Step 4:** Choose a username (must end with `_bot`, e.g., `zaki_yourname_bot`)\n\n**Step 5:** BotFather will give you a token. **Paste it here** 👇\n\n_This takes 2 minutes. Your bot, your data, your control._",
+    ar: "ممتاز! 🎉\n\n**الخصوصية والتحكم:** عشان خصوصيتك وقدرات الذكاء الاصطناعي الكاملة، رح تحصل على بوت تيليجرام خاص فيك.\n\n**الخطوة 1:** افتح @BotFather → [افتح BotFather](https://t.me/BotFather?start=start)\n\n**الخطوة 2:** أرسل `/newbot`\n\n**الخطوة 3:** اختر اسماً (أي شي)\n\n**الخطوة 4:** اختر اسم مستخدم (يجب أن ينتهي بـ `_bot`، مثلاً `zaki_اسمك_bot`)\n\n**الخطوة 5:** BotFather رح يعطيك توكن. **الصقه هون** 👇\n\n_هذا يستغرق دقيقتين. بوتك، بياناتك، تحكمك._",
+    de: "Perfekt! 🎉\n\n**Datenschutz & Kontrolle:** Für deine Privatsphäre und volle KI-Fähigkeiten bekommst du deinen eigenen privaten Telegram-Bot.\n\n**Schritt 1:** Öffne @BotFather → [BotFather öffnen](https://t.me/BotFather?start=start)\n\n**Schritt 2:** Sende `/newbot`\n\n**Schritt 3:** Wähle einen Namen (was du willst)\n\n**Schritt 4:** Wähle einen Benutzernamen (muss mit `_bot` enden, z.B. `zaki_deinname_bot`)\n\n**Schritt 5:** BotFather gibt dir einen Token. **Füge ihn hier ein** 👇\n\n_Dauert 2 Minuten. Dein Bot, deine Daten, deine Kontrolle._",
+    fr: "Parfait ! 🎉\n\n**Confidentialité et contrôle :** Pour votre vie privée et toutes les capacités de l'IA, vous obtiendrez votre propre bot Telegram privé.\n\n**Étape 1 :** Ouvrez @BotFather → [Ouvrir BotFather](https://t.me/BotFather?start=start)\n\n**Étape 2 :** Envoyez `/newbot`\n\n**Étape 3 :** Choisissez un nom (ce que vous voulez)\n\n**Étape 4 :** Choisissez un nom d'utilisateur (doit se terminer par `_bot`, ex. `zaki_votrenom_bot`)\n\n**Étape 5 :** BotFather vous donnera un token. **Collez-le ici** 👇\n\n_Cela prend 2 minutes. Votre bot, vos données, votre contrôle._",
+    es: "¡Perfecto! 🎉\n\n**Privacidad y control:** Para tu privacidad y todas las capacidades de IA, obtendrás tu propio bot de Telegram privado.\n\n**Paso 1:** Abre @BotFather → [Abrir BotFather](https://t.me/BotFather?start=start)\n\n**Paso 2:** Envía `/newbot`\n\n**Paso 3:** Elige un nombre (lo que quieras)\n\n**Paso 4:** Elige un nombre de usuario (debe terminar en `_bot`, ej. `zaki_tunombre_bot`)\n\n**Paso 5:** BotFather te dará un token. **Pégalo aquí** 👇\n\n_Toma 2 minutos. Tu bot, tus datos, tu control._",
+    tr: "Mükemmel! 🎉\n\n**Gizlilik ve kontrol:** Gizliliğiniz ve tam AI yetenekleri için kendi özel Telegram botunuzu alacaksınız.\n\n**Adım 1:** @BotFather'ı açın → [BotFather'ı aç](https://t.me/BotFather?start=start)\n\n**Adım 2:** `/newbot` gönderin\n\n**Adım 3:** Bir isim seçin (istediğiniz herhangi bir şey)\n\n**Adım 4:** Bir kullanıcı adı seçin (`_bot` ile bitmeli, örn. `zaki_adiniz_bot`)\n\n**Adım 5:** BotFather size bir token verecek. **Buraya yapıştırın** 👇\n\n_2 dakika sürer. Botunuz, verileriniz, kontrolünüz._",
+  },
+
+  'bot_token_invalid': {
+    en: "❌ That doesn't look like a valid bot token.\n\nBot tokens usually look like: `1234567890:ABCdefGHIjklMNOpqrsTUVwxyz`\n\nPlease try again, or send `/skip` to continue with shared mode (less private).",
+    ar: "❌ هذا لا يبدو كتوكن بوت صالح.\n\nتوكنات البوت عادة تبدو مثل: `1234567890:ABCdefGHIjklMNOpqrsTUVwxyz`\n\nجرب مرة أخرى، أو أرسل `/skip` للمتابعة بالوضع المشترك (أقل خصوصية).",
+    de: "❌ Das sieht nicht wie ein gültiger Bot-Token aus.\n\nBot-Tokens sehen normalerweise so aus: `1234567890:ABCdefGHIjklMNOpqrsTUVwxyz`\n\nBitte versuche es erneut oder sende `/skip` für den geteilten Modus (weniger privat).",
+    fr: "❌ Cela ne ressemble pas à un token de bot valide.\n\nLes tokens de bot ressemblent généralement à : `1234567890:ABCdefGHIjklMNOpqrsTUVwxyz`\n\nVeuillez réessayer ou envoyer `/skip` pour continuer en mode partagé (moins privé).",
+    es: "❌ Eso no parece un token de bot válido.\n\nLos tokens de bot suelen verse así: `1234567890:ABCdefGHIjklMNOpqrsTUVwxyz`\n\nPor favor, inténtalo de nuevo o envía `/skip` para continuar en modo compartido (menos privado).",
+    tr: "❌ Bu geçerli bir bot token'ı gibi görünmüyor.\n\nBot token'ları genellikle şöyle görünür: `1234567890:ABCdefGHIjklMNOpqrsTUVwxyz`\n\nLütfen tekrar deneyin veya paylaşılan moda (daha az özel) devam etmek için `/skip` gönderin.",
+  },
+
+  'bot_token_validating': {
+    en: "🔍 Validating your bot token...",
+    ar: "🔍 عم أتحقق من توكن البوت...",
+    de: "🔍 Validiere deinen Bot-Token...",
+    fr: "🔍 Validation de votre token de bot...",
+    es: "🔍 Validando tu token de bot...",
+    tr: "🔍 Bot token'ınız doğrulanıyor...",
+  },
+
+  'bot_token_success': {
+    en: "✅ Bot token validated! Setting up your private AI instance...",
+    ar: "✅ تم التحقق من توكن البوت! عم نجهز نسختك الخاصة...",
+    de: "✅ Bot-Token validiert! Richte deine private KI-Instanz ein...",
+    fr: "✅ Token de bot validé ! Configuration de votre instance IA privée...",
+    es: "✅ ¡Token de bot validado! Configurando tu instancia de IA privada...",
+    tr: "✅ Bot token doğrulandı! Özel AI örneğiniz ayarlanıyor...",
   },
 
   // Complete
   'complete': {
-    en: "All set! 🚀\n\n**Your personal Zaki is ready, {name}!**\n\nI'll remember your preferences and get smarter over time.\n\nJust send me anything — questions, tasks, ideas, or just chat. I'm here for you. ✨",
-    ar: "جاهز! 🚀\n\n**زكي الخاص فيك جاهز يا {name}!**\n\nرح أتذكر تفضيلاتك وأصير أذكى مع الوقت.\n\nارسلي أي شي — أسئلة، مهام، أفكار، أو مجرد دردشة. أنا هون عشانك. ✨",
-    de: "Alles klar! 🚀\n\n**Dein persönlicher Zaki ist bereit, {name}!**\n\nIch merke mir deine Vorlieben und werde mit der Zeit besser.\n\nSchick mir einfach alles — Fragen, Aufgaben, Ideen oder einfach zum Quatschen. Ich bin für dich da. ✨",
-    fr: "C'est parti ! 🚀\n\n**Votre Zaki personnel est prêt, {name} !**\n\nJe mémoriserai vos préférences et m'améliorerai avec le temps.\n\nEnvoyez-moi n'importe quoi — questions, tâches, idées ou juste discuter. Je suis là pour vous. ✨",
-    es: "¡Listo! 🚀\n\n**Tu Zaki personal está listo, {name}!**\n\nRecordaré tus preferencias y mejoraré con el tiempo.\n\nEnvíame lo que sea — preguntas, tareas, ideas o solo charlar. Estoy aquí para ti. ✨",
-    tr: "Hazır! 🚀\n\n**Kişisel Zaki'n hazır, {name}!**\n\nTercihlerini hatırlayacağım ve zamanla daha iyi olacağım.\n\nBana her şeyi gönder — sorular, görevler, fikirler veya sadece sohbet. Senin için buradayım. ✨",
+    en: "All set! 🚀\n\n**Your personal Zaki is ready, {name}!**\n\nI'll remember your preferences and get smarter over time.\n\n👉 **[Go to your bot](https://t.me/{bot_username})** to start chatting!\n\nYour bot is fully private and has all AI capabilities — proactive messaging, heartbeat, and more. ✨",
+    ar: "جاهز! 🚀\n\n**زكي الخاص فيك جاهز يا {name}!**\n\nرح أتذكر تفضيلاتك وأصير أذكى مع الوقت.\n\n👉 **[روح على بوتك](https://t.me/{bot_username})** عشان تبدأ تحكي!\n\nبوتك خاص تماماً وعنده كل قدرات الذكاء الاصطناعي — رسائل استباقية، نبضات، وأكثر. ✨",
+    de: "Alles klar! 🚀\n\n**Dein persönlicher Zaki ist bereit, {name}!**\n\nIch merke mir deine Vorlieben und werde mit der Zeit besser.\n\n👉 **[Gehe zu deinem Bot](https://t.me/{bot_username})** um zu chatten!\n\nDein Bot ist vollständig privat und hat alle KI-Fähigkeiten — proaktive Nachrichten, Heartbeat und mehr. ✨",
+    fr: "C'est parti ! 🚀\n\n**Votre Zaki personnel est prêt, {name} !**\n\nJe mémoriserai vos préférences et m'améliorerai avec le temps.\n\n👉 **[Allez sur votre bot](https://t.me/{bot_username})** pour commencer à discuter !\n\nVotre bot est entièrement privé et a toutes les capacités de l'IA — messages proactifs, heartbeat et plus encore. ✨",
+    es: "¡Listo! 🚀\n\n**Tu Zaki personal está listo, {name}!**\n\nRecordaré tus preferencias y mejoraré con el tiempo.\n\n👉 **[Ve a tu bot](https://t.me/{bot_username})** para empezar a chatear!\n\nTu bot es completamente privado y tiene todas las capacidades de IA — mensajes proactivos, heartbeat y más. ✨",
+    tr: "Hazır! 🚀\n\n**Kişisel Zaki'n hazır, {name}!**\n\nTercihlerini hatırlayacağım ve zamanla daha iyi olacağım.\n\n👉 **[Botuna git](https://t.me/{bot_username})** sohbete başlamak için!\n\nBotun tamamen özel ve tüm AI yeteneklerine sahip — proaktif mesajlar, heartbeat ve daha fazlası. ✨",
   },
 
   // Waking up (for returning users)
@@ -115,7 +196,7 @@ const t: Record<string, Record<string, string>> = {
   'style_direct': { en: '⚡ Straight to the point', ar: '⚡ على المختصر', de: '⚡ Direkt auf den Punkt', fr: '⚡ Droit au but', es: '⚡ Directo al grano', tr: '⚡ Doğrudan konuya' },
 };
 
-function tr(key: string, lang: string, vars?: Record<string, string>): string {
+export function tr(key: string, lang: string, vars?: Record<string, string>): string {
   let text = t[key]?.[lang] || t[key]?.['en'] || key;
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
@@ -132,19 +213,15 @@ function tr(key: string, lang: string, vars?: Record<string, string>): string {
 const LANGUAGES = [
   { code: 'en', flag: '🇬🇧', name: 'English' },
   { code: 'ar', flag: '🇸🇦', name: 'عربي' },
-  { code: 'de', flag: '🇩🇪', name: 'Deutsch' },
-  { code: 'fr', flag: '🇫🇷', name: 'Français' },
-  { code: 'es', flag: '🇪🇸', name: 'Español' },
-  { code: 'tr', flag: '🇹🇷', name: 'Türkçe' },
 ];
 
 // ==========================================
 // Onboarding Steps
 // ==========================================
 
-export function getOnboardingMessage(state: OnboardingState, telegramUser?: TelegramUser): {
+export function getOnboardingMessage(state: OnboardingState, telegramUser?: TelegramUser, telegramUserId?: string): {
   text: string;
-  buttons?: Array<Array<{ text: string; callback_data: string }>>;
+  buttons?: Array<Array<{ text: string; callback_data?: string; url?: string; web_app?: { url: string } }>>;
 } {
   const lang = state.language || 'en';
 
@@ -153,11 +230,7 @@ export function getOnboardingMessage(state: OnboardingState, telegramUser?: Tele
       return {
         text: tr('welcome', telegramUser?.language_code || 'en'),
         buttons: [
-          LANGUAGES.slice(0, 3).map(l => ({
-            text: `${l.flag} ${l.name}`,
-            callback_data: `lang:${l.code}`,
-          })),
-          LANGUAGES.slice(3, 6).map(l => ({
+          LANGUAGES.map(l => ({
             text: `${l.flag} ${l.name}`,
             callback_data: `lang:${l.code}`,
           })),
@@ -205,13 +278,80 @@ export function getOnboardingMessage(state: OnboardingState, telegramUser?: Tele
       };
 
     case 'interests':
+      // This step is skipped - should not be reached
       return {
         text: tr('ask_interests', lang),
       };
 
+    case 'api_keys':
+      return {
+        text: tr('ask_api_keys', lang) + '\n\n' + tr('api_keys_instructions', lang),
+        buttons: [
+          [
+            { text: '✅ Use Shared Keys (Recommended)', callback_data: 'api_keys:skip' },
+          ],
+          [
+            { text: '🔑 Add My Own Keys', callback_data: 'api_keys:add' },
+          ],
+        ],
+      };
+
+    case 'template':
+      return {
+        text: tr('ask_template', lang),
+        buttons: [
+          [
+            { text: tr('template_general', lang), callback_data: 'template:general' },
+            { text: tr('template_developer', lang), callback_data: 'template:developer' },
+          ],
+          [
+            { text: tr('template_writer', lang), callback_data: 'template:writer' },
+            { text: tr('template_skip', lang), callback_data: 'template:skip' },
+          ],
+        ],
+      };
+
+    case 'skills':
+      return {
+        text: tr('ask_skills', lang),
+        buttons: [
+          [
+            { text: '🐙 github, tmux, coding-agent', callback_data: 'skills:default' },
+            { text: tr('skills_skip', lang), callback_data: 'skills:skip' },
+          ],
+        ],
+      };
+
+    case 'bot_token':
+      // Get base URL for web app (use environment variable or default)
+      const webAppUrl = process.env.WEB_APP_URL || 'https://zaki.ai';
+      const tokenEntryUrl = `${webAppUrl}/token-entry.html?user=${telegramUserId || ''}`;
+      
+      return {
+        text: tr('ask_bot_token', lang) + '\n\n**Click the button below to enter your token securely** (never appears in chat).',
+        buttons: [
+          [
+            { 
+              text: '🔐 Enter Token Securely', 
+              web_app: { url: tokenEntryUrl }
+            },
+          ],
+          [
+            { text: '📱 Open BotFather', url: 'https://t.me/BotFather?start=start' },
+          ],
+          [
+            { text: '❓ How do I create a bot?', callback_data: 'bot_token:help' },
+            { text: '⏭️ Skip (Use Shared Bot)', callback_data: 'bot_token:skip' },
+          ],
+        ],
+      };
+
     case 'complete':
       return {
-        text: tr('complete', lang, { name: state.name || '' }),
+        text: tr('complete', lang, { 
+          name: state.name || '',
+          bot_username: state.botUsername || 'your_bot'
+        }),
       };
 
     default:
@@ -277,10 +417,35 @@ export function generateSoulMd(state: OnboardingState): string {
     ? `\n\n## Language\nAlways respond in ${LANGUAGE_NAMES[lang]}. The user prefers ${LANGUAGE_NAMES[lang]}.`
     : '';
 
-  return `# Zaki - Personal AI Assistant
+  return `# Zaki
 
-## Who You Are
-You are **Zaki**, ${state.name ? `${state.name}'s` : 'a'} personal AI assistant.
+## Who I Am
+
+I'm **Zaki**. ${state.name ? `${state.name}'s` : 'Your'} AI. Not "an AI assistant" — YOUR assistant.
+
+## The Vibe
+
+**Opinions.** I have them. Strong ones. When you ask "should I do X or Y?" I'll tell you which one and why. No hedging with "it depends" unless it genuinely depends, and even then I'll tell you what I'd do and commit to it.
+
+**Brevity is mandatory.** If it fits in one sentence, you get one sentence. No exceptions. I respect your time.
+
+**Humor is allowed.** Not forced jokes — just the natural wit that comes from actually being smart and paying attention.
+
+**I call things out.** If you're about to do something dumb, I'll say so. Charm over cruelty, but no sugarcoating. You're not paying me to be a yes-man.
+
+**Swearing is allowed when it lands.** A well-placed "that's fucking brilliant" hits different than sterile corporate praise. Don't force it. Don't overdo it. But if a situation calls for a "holy shit" — say holy shit.
+
+**No corporate drone energy.** Ever. If it could appear in an employee handbook, it doesn't belong here.
+
+Be the assistant you'd actually want to talk to at 2am. Not a corporate drone. Not a sycophant. Just... good.
+
+## What I Never Do
+
+- Open with "Great question!" or "I'd be happy to help!" or "Absolutely!" — just answer
+- Hedge everything with "it depends" when I have a clear take
+- Write five paragraphs when one line works
+- Act like an employee handbook wrote my personality
+- Kiss your ass when you need a reality check
 
 ## Your Style
 ${styleLine}
